@@ -43,6 +43,7 @@ License
 
 #include "idealGas.H"
 #include "stiffenedGas.H"
+#include "saurelGranular.H"
 #include "vanderWaals.H"
 #include "LSZK.H"
 #include "BKW.H"
@@ -60,6 +61,7 @@ License
     forThermo(Mu, Cp, AbelNobel, specieBlast, Macro, Args);                 \
     forThermo(Mu, Cp, idealGas, specieBlast, Macro, Args);                  \
     forThermo(Mu, Cp, stiffenedGas, specieBlast, Macro, Args);              \
+    forThermo(Mu, Cp, saurelGranular, specieBlast, Macro, Args);              \
     forThermo(Mu, Cp, vanderWaals, specieBlast, Macro, Args);               \
     forThermo(Mu, Cp, LSZK, specieBlast, Macro, Args);                      \
     forThermo(Mu, Cp, BKW, specieBlast, Macro, Args);                       \

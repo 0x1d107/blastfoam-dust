@@ -49,6 +49,7 @@ License
 #include "idealGas.H"
 #include "perfectGas.H"
 #include "stiffenedGas.H"
+#include "saurelGranular.H"
 #include "Tait.H"
 #include "AbelNobel.H"
 #include "vanderWaals.H"
@@ -195,6 +196,14 @@ namespace Foam
         constTransport,
         eConst,
         stiffenedGas,
+        blastSpecie
+    );
+
+    defineThermoType
+    (
+        constTransport,
+        eConst,
+        saurelGranular,
         blastSpecie
     );
 
