@@ -5,8 +5,6 @@
     \\  /    A nd           | Copyright (C) 2011-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
-2020-04-02 Jeff Heylmun:    Modified class for a density based thermodynamic
-                            class
 -------------------------------------------------------------------------------
 License
     This file is derivative work of OpenFOAM.
@@ -38,22 +36,9 @@ Foam::saurelGranular<Specie>::saurelGranular
 :
     Specie(dict),
     a_(dict.subDict("equationOfState").lookup<scalar>("a")),
-    gamma_(dict.subDict("equationOfState").lookup<scalar>("gamma")),
-    minRho_
-    (
-        dict.subDict("equationOfState").lookupOrDefault<scalar>
-        (
-            "minRho",
-            1e-6
-        )
-    )
+    n_(dict.subDict("equationOfState").lookup<scalar>("n")),
+    alphaCrit_(dict.subDict("equationOfState").lookup<scalar>("alphaCrit"))
 {
-    if (gamma_ <= 1.0)
-    {
-        FatalErrorInFunction
-            << "gamma must be greater than 1."
-            << abort(FatalError);
-    }
 }
 
 
@@ -66,7 +51,8 @@ void Foam::saurelGranular<Specie>::write(Ostream& os) const
     Specie::write(os);
     dictionary dict("equationOfState");
     dict.add("a", a_);
-    dict.add("gamma", gamma_);
+    dict.add("n", n_);
+    dict.add("alphaCrit", alphaCrit_);
     os  << indent << dict.dictName() << dict;
 }
 

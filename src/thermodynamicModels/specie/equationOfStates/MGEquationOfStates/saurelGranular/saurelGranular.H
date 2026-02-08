@@ -5,8 +5,7 @@
     \\  /    A nd           | Copyright (C) 2011-2020 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
-2020-04-02 Jeff Heylmun:    Modified class for a density based thermodynamic
-                            class
+
 -------------------------------------------------------------------------------
 License
     This file is derivative work of OpenFOAM.
@@ -91,14 +90,13 @@ class saurelGranular
 {
 // Private data
 
-        //- Model coefficients
-        scalar a_;
 
-        //- Specific heat ratio
-        scalar gamma_;
-
-        //- Minimum density used for internal energy contribution
-        scalar minRho_;
+		//- Volume fraction that activates compaction 
+    	scalar alphaCrit_;
+    	//- Power 
+    	scalar n_;
+    	//- Stiffness
+    	scalar a_;
 
 
         //- Return deviation from ideal gas pressure
@@ -115,14 +113,11 @@ class saurelGranular
             const scalar rho,
             const scalar e
         ) const;
-
-        //- Gamma function
-        inline scalar GammaMG
-        (
-            const scalar rho,
-            const scalar e
-        ) const;
-
+		
+        inline scalar b1(const scalar alpha) const;
+        inline scalar b2(const scalar alpha) const;
+		inline scalar B(const scalar alpha) const;
+		inline scalar dBdalpha(const scalar alpha) const;
 
 public:
 
@@ -133,7 +128,8 @@ public:
         (
             const Specie& sp,
             const scalar a,
-            const scalar gamma
+            const scalar n,
+            const scalar alphaCrit
         );
 
         //- Construct from dictionary
