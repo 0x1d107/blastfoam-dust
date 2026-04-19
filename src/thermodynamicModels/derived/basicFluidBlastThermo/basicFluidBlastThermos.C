@@ -28,6 +28,7 @@ License
 
 #include "fluidBlastThermo.H"
 #include "basicFluidBlastThermo.H"
+#include "saurelFluidBlastThermo.H"
 #include "eBlastThermo.H"
 #include "forBlastGases.H"
 #include "forBlastLiquids.H"
@@ -46,6 +47,14 @@ namespace Foam
         makeThermo,
         fluidBlastThermo,
         basicFluidBlastThermo,
+        eBlastThermo
+    );
+
+    forGases
+    (
+        makeThermo,
+        fluidBlastThermo,
+        saurelFluidBlastThermo,
         eBlastThermo
     );
 
