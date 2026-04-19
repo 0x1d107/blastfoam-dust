@@ -121,7 +121,7 @@ gas
         d           0;
     }
 
-    type basic;
+    type saurel;
     thermoType
     {
         transport   const;

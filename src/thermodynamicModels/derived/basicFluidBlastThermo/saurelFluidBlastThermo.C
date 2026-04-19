@@ -103,7 +103,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
     {
         const fvPatchScalarField& prho = this->rho_.boundaryField()[patchi];
         const fvPatchScalarField& pT = this->TRef().boundaryField()[patchi];
-        fvPatchScalarField& phe = this->heRef().boundaryField()[patchi];
+        const fvPatchScalarField& phe = this->heRef().boundaryField()[patchi];
         const fvPatchScalarField& pp = this->pRef().boundaryField()[patchi];
 
         fvPatchScalarField& pCp = bCp[patchi];
@@ -115,7 +115,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
 
         forAll(prho, facei)
         {
-        	phe[facei]+= B(palpha[facei]);
+        	//phe[facei]+= B(palpha[facei]);
             const scalar rhoi(prho[facei]);
             const scalar ei(phe[facei]);
             const scalar Ti(pT[facei]);
@@ -155,7 +155,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate
         {
             const scalar alphai(alpha[celli]);
             const scalar rhoi(this->rho_[celli]);
-            he[celli] += B(alphai);
+            //he[celli] += B(alphai);
             const scalar ei(he[celli]);
             const scalar Ti(T[celli]);
             const scalar Xii = alphai/(t.Gamma(rhoi, ei, Ti) - 1.0);
@@ -197,7 +197,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate
             if (alphai > this->residualAlpha_.value())
             {
                 const scalar rhoi(prho[facei]);
-				phe[facei] += B(alphai);
+				//phe[facei] += B(alphai);
                 const scalar ei(phe[facei]);
                 const scalar Ti(pT[facei]);
                 const scalar Xii = alphai/(t.Gamma(rhoi, ei, Ti) - 1.0);

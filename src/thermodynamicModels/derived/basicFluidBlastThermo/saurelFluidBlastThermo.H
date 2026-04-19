@@ -68,7 +68,7 @@ class saurelFluidBlastThermo
 public:
 
     //- Runtime type information
-    TypeName("basic");
+    TypeName("saurel");
 
     // Constructor
     saurelFluidBlastThermo
