@@ -43,11 +43,15 @@ template <class Thermo> scalar Foam::saurelFluidBlastThermo<Thermo>::beta(scalar
 	return alpha*rho*dBdAlpha(alpha);
 }
 template <class Thermo> scalar Foam::saurelFluidBlastThermo<Thermo>::B(scalar alpha) const{
+	if(alpha<=alpha0_)	
+		return 0;
 	return a_*pow(b1(alpha) - b1(alpha0_)+b2(alpha,alpha0_),n_);	
 }
 template <class Thermo> scalar Foam::saurelFluidBlastThermo<Thermo>::dBdAlpha(scalar alpha) const{
+	if(alpha<=alpha0_)	
+		return 0;
 	
-	return a_*n_*log((1-alpha)/(1-alpha0_))*pow(B(alpha)/a_,n_-1);	
+	return -a_*n_*log((1-alpha)/(1-alpha0_))*pow(B(alpha)/a_,(n_-1)/n_);	
 }
 
 template<class Thermo>
@@ -68,24 +72,28 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
         const scalar& rhoi(this->rho_[celli]);
         scalar& ei(eI[celli]);
         scalar& Ti = TI[celli];
-        ei+=B(alphaI[celli]);
+
+		scalar Bval = B(alphaI[celli]);
+		scalar eHydro = ei - Bval;
+		eHydro = max(eHydro,small);
 
         // Update temperature
-        Ti = t.TRhoE(Ti, rhoi, ei);
+        Ti = t.TRhoE(Ti, rhoi, eHydro);
         if (Ti < this->TLow_)
         {
-            ei = t.Es(rhoi, ei, this->TLow_);
+            ei = t.Es(rhoi, eHydro, this->TLow_);
             Ti = this->TLow_;
         }
 
-        scalar Cpi = t.Cp(rhoi, ei, Ti);
-        alphaI[celli] = t.kappa(rhoi, ei, Ti)/Cpi;
-        scalar pi = t.p(rhoi, ei, Ti)+beta(alphaI[celli],rhoi);
+        scalar Cpi = t.Cp(rhoi, eHydro, Ti);
+        alphaI[celli] = t.kappa(rhoi, eHydro, Ti)/Cpi;
+		scalar pHydro = t.p(rhoi,eHydro,Ti);
+        scalar pi = pHydro+beta(alphaI[celli],rhoi);
         pI[celli] = pi;
         CpI[celli] = Cpi;
-        CvI[celli] = t.Cv(rhoi, ei, Ti);
-        muI[celli] = t.mu(rhoi, ei, Ti);
-        speedOfSoundI[celli] = sqrt(max(t.cSqr(pi, rhoi, ei, Ti), small)+dBdAlpha(alphaI[celli]));
+        CvI[celli] = t.Cv(rhoi, eHydro, Ti);
+        muI[celli] = t.mu(rhoi, eHydro, Ti);
+        speedOfSoundI[celli] = sqrt(max(t.cSqr(pHydro, rhoi, eHydro, Ti), small)+dBdAlpha(alphaI[celli]));
     }
 
     this->TRef().correctBoundaryConditions();
@@ -106,6 +114,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
         const fvPatchScalarField& phe = this->heRef().boundaryField()[patchi];
         const fvPatchScalarField& pp = this->pRef().boundaryField()[patchi];
 
+
         fvPatchScalarField& pCp = bCp[patchi];
         fvPatchScalarField& pCv = bCv[patchi];
         fvPatchScalarField& pmu = bmu[patchi];
@@ -115,19 +124,20 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
 
         forAll(prho, facei)
         {
-        	//phe[facei]+= B(palpha[facei]);
             const scalar rhoi(prho[facei]);
             const scalar ei(phe[facei]);
             const scalar Ti(pT[facei]);
+			scalar Bval = B(palpha[facei]);
+			scalar eHydro = ei - Bval;
             
 
-            const scalar Cpi = t.Cp(rhoi, ei, Ti);
+            const scalar Cpi = t.Cp(rhoi, eHydro, Ti);
             pCp[facei] = Cpi;
-            pCv[facei] = t.Cv(rhoi, ei, Ti);
-            pmu[facei] = t.mu(rhoi, ei, Ti);
-            palpha[facei] = t.kappa(rhoi, ei, Ti)/Cpi;
+            pCv[facei] = t.Cv(rhoi, eHydro, Ti);
+            pmu[facei] = t.mu(rhoi, eHydro, Ti);
+            palpha[facei] = t.kappa(rhoi, eHydro, Ti)/Cpi;
             pspeedOfSound[facei] =
-                sqrt(max(t.cSqr(pp[facei], rhoi, ei, Ti), small)+dBdAlpha(palpha[facei]));
+                sqrt(max(t.cSqr(pp[facei], rhoi, eHydro, Ti), small)+dBdAlpha(palpha[facei]));
         }
     }
 }
@@ -155,7 +165,6 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate
         {
             const scalar alphai(alpha[celli]);
             const scalar rhoi(this->rho_[celli]);
-            //he[celli] += B(alphai);
             const scalar ei(he[celli]);
             const scalar Ti(T[celli]);
             const scalar Xii = alphai/(t.Gamma(rhoi, ei, Ti) - 1.0);
@@ -197,7 +206,6 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate
             if (alphai > this->residualAlpha_.value())
             {
                 const scalar rhoi(prho[facei]);
-				//phe[facei] += B(alphai);
                 const scalar ei(phe[facei]);
                 const scalar Ti(pT[facei]);
                 const scalar Xii = alphai/(t.Gamma(rhoi, ei, Ti) - 1.0);
@@ -292,8 +300,8 @@ Foam::saurelFluidBlastThermo<Thermo>::saurelFluidBlastThermo
         masterName
     )
 {
-	n_ = dict.lookup<scalar>("a");
-	a_ = dict.lookup<scalar>("n");
+	n_ = dict.lookup<scalar>("n");
+	a_ = dict.lookup<scalar>("a");
 	alpha0_ = dict.lookup<scalar>("alpha0");
     //- Initialize the density using the pressure and temperature
     //  This is only done at the first time step (Not on restart)

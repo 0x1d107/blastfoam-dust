@@ -1,5 +1,6 @@
 prefix = /opt/blastfoam
 export MAKE=True
+export WM_COMPILE_OPTION=Debug
 
 build: SHELL:=bash
 build:
