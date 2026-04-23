@@ -65,6 +65,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
     scalarField& CvI = this->CvRef().primitiveFieldRef();
     scalarField& muI = this->muRef().primitiveFieldRef();
     scalarField& alphaI = this->alphaRef().primitiveFieldRef();
+
     scalarField& speedOfSoundI = this->speedOfSoundRef().primitiveFieldRef();
 
     forAll(this->rho_, celli)
@@ -72,8 +73,8 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
         const scalar& rhoi(this->rho_[celli]);
         scalar& ei(eI[celli]);
         scalar& Ti = TI[celli];
-
-		scalar Bval = B(alphaI[celli]);
+		const scalar vfi = alphaVol_.primitiveField()[celli];
+		scalar Bval = B(vfi);
 		scalar eHydro = ei - Bval;
 		eHydro = max(eHydro,small);
 
@@ -88,12 +89,12 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
         scalar Cpi = t.Cp(rhoi, eHydro, Ti);
         alphaI[celli] = t.kappa(rhoi, eHydro, Ti)/Cpi;
 		scalar pHydro = t.p(rhoi,eHydro,Ti);
-        scalar pi = pHydro+beta(alphaI[celli],rhoi);
+        scalar pi = pHydro+beta(vfi,rhoi);
         pI[celli] = pi;
         CpI[celli] = Cpi;
         CvI[celli] = t.Cv(rhoi, eHydro, Ti);
         muI[celli] = t.mu(rhoi, eHydro, Ti);
-        speedOfSoundI[celli] = sqrt(max(t.cSqr(pHydro, rhoi, eHydro, Ti), small)+dBdAlpha(alphaI[celli]));
+        speedOfSoundI[celli] = sqrt(max(t.cSqr(pHydro, rhoi, eHydro, Ti), small)+dBdAlpha(vfi));
     }
 
     this->TRef().correctBoundaryConditions();
@@ -113,6 +114,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
         const fvPatchScalarField& pT = this->TRef().boundaryField()[patchi];
         const fvPatchScalarField& phe = this->heRef().boundaryField()[patchi];
         const fvPatchScalarField& pp = this->pRef().boundaryField()[patchi];
+        const fvPatchScalarField& pvf = alphaVol_.boundaryField()[patchi];
 
 
         fvPatchScalarField& pCp = bCp[patchi];
@@ -127,7 +129,8 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
             const scalar rhoi(prho[facei]);
             const scalar ei(phe[facei]);
             const scalar Ti(pT[facei]);
-			scalar Bval = B(palpha[facei]);
+			const scalar vfi(pvf[facei]);
+			scalar Bval = B(vfi);
 			scalar eHydro = ei - Bval;
             
 
@@ -137,7 +140,7 @@ void Foam::saurelFluidBlastThermo<Thermo>::calculate()
             pmu[facei] = t.mu(rhoi, eHydro, Ti);
             palpha[facei] = t.kappa(rhoi, eHydro, Ti)/Cpi;
             pspeedOfSound[facei] =
-                sqrt(max(t.cSqr(pp[facei], rhoi, eHydro, Ti), small)+dBdAlpha(palpha[facei]));
+                sqrt(max(t.cSqr(pp[facei], rhoi, eHydro, Ti), small)+dBdAlpha(vfi));
         }
     }
 }
@@ -298,7 +301,9 @@ Foam::saurelFluidBlastThermo<Thermo>::saurelFluidBlastThermo
         dict,
         phaseName,
         masterName
-    )
+    ),
+	alphaVol_(mesh.lookupObject<volScalarField>("alpha."+phaseName))
+
 {
 	n_ = dict.lookup<scalar>("n");
 	a_ = dict.lookup<scalar>("a");

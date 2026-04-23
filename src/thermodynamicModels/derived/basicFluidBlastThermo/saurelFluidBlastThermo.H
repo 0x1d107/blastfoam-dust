@@ -63,6 +63,7 @@ class saurelFluidBlastThermo
         scalar a_;
         scalar n_;
         scalar alpha0_;
+		const volScalarField & alphaVol_;
 
 
 public:
